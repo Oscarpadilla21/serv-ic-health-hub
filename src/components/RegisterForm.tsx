@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Lock, Mail, Stethoscope, UserPlus } from "lucide-react";
+import { User, Lock, Mail, Stethoscope, UserPlus, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface RegisterFormProps {
@@ -15,6 +15,8 @@ interface RegisterFormProps {
     fullName: string;
     specialty: string;
     licenseNumber: string;
+    securityQuestion: string;
+    securityAnswer: string;
   }) => void;
   onSwitchToLogin: () => void;
 }
@@ -26,19 +28,40 @@ export const RegisterForm = ({ onRegister, onSwitchToLogin }: RegisterFormProps)
     email: "",
     fullName: "",
     specialty: "",
-    licenseNumber: ""
+    licenseNumber: "",
+    securityQuestion: "",
+    securityAnswer: ""
   });
   const { toast } = useToast();
 
+  const securityQuestions = [
+    "¿Cuál fue el nombre de su primera mascota?",
+    "¿En qué ciudad nació?",
+    "¿Cuál es el nombre de soltera de su madre?",
+    "¿Cuál fue el nombre de su primera escuela?",
+    "¿Cuál es su comida favorita?",
+    "¿Cuál fue su primer empleo?",
+    "¿Cuál es el nombre de su mejor amigo de la infancia?"
+  ];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const { username, password, email, fullName, specialty, licenseNumber } = formData;
+    const { username, password, email, fullName, specialty, licenseNumber, securityQuestion, securityAnswer } = formData;
     
-    if (!username || !password || !email || !fullName || !specialty || !licenseNumber) {
+    if (!username || !password || !email || !fullName || !specialty || !licenseNumber || !securityQuestion || !securityAnswer) {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Por favor complete todos los campos"
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "La contraseña debe tener al menos 6 caracteres"
       });
       return;
     }
@@ -111,7 +134,7 @@ export const RegisterForm = ({ onRegister, onSwitchToLogin }: RegisterFormProps)
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Mínimo 6 caracteres"
                   value={formData.password}
                   onChange={(e) => updateField("password", e.target.value)}
                   className="pl-10"
@@ -152,6 +175,38 @@ export const RegisterForm = ({ onRegister, onSwitchToLogin }: RegisterFormProps)
                   className="pl-10"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Pregunta de seguridad */}
+          <div className="border-t pt-4 space-y-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <HelpCircle className="h-4 w-4" />
+              <span>Para recuperación de contraseña</span>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="securityQuestion">Pregunta de Seguridad</Label>
+              <Select value={formData.securityQuestion} onValueChange={(value) => updateField("securityQuestion", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar pregunta de seguridad" />
+                </SelectTrigger>
+                <SelectContent>
+                  {securityQuestions.map((question, index) => (
+                    <SelectItem key={index} value={question}>{question}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="securityAnswer">Respuesta de Seguridad</Label>
+              <Input
+                id="securityAnswer"
+                placeholder="Su respuesta (será convertida a minúsculas)"
+                value={formData.securityAnswer}
+                onChange={(e) => updateField("securityAnswer", e.target.value)}
+              />
             </div>
           </div>
 

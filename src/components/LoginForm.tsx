@@ -9,9 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 interface LoginFormProps {
   onLogin: (credentials: { username: string; password: string }) => void;
   onSwitchToRegister: () => void;
+  onSwitchToRecovery: () => void;
 }
 
-export const LoginForm = ({ onLogin, onSwitchToRegister }: LoginFormProps) => {
+export const LoginForm = ({ onLogin, onSwitchToRegister, onSwitchToRecovery }: LoginFormProps) => {
   const [credentials, setCredentials] = useState({ username: "", password: "" });
   const { toast } = useToast();
 
@@ -74,13 +75,20 @@ export const LoginForm = ({ onLogin, onSwitchToRegister }: LoginFormProps) => {
             Iniciar Sesión
           </Button>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
             <button
               type="button"
               onClick={onSwitchToRegister}
-              className="text-primary hover:underline text-sm"
+              className="text-primary hover:underline text-sm block w-full"
             >
               ¿No tiene cuenta? Registrarse
+            </button>
+            <button
+              type="button"
+              onClick={onSwitchToRecovery}
+              className="text-muted-foreground hover:text-primary hover:underline text-sm"
+            >
+              ¿Olvidó su contraseña?
             </button>
           </div>
         </form>

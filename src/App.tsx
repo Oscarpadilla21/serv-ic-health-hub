@@ -4,10 +4,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useDatabase } from "@/hooks/useDatabase";
 import { AuthLayout } from "@/components/AuthLayout";
 import { LoginForm } from "@/components/LoginForm";
 import { RegisterForm } from "@/components/RegisterForm";
+import { PasswordRecovery } from "@/components/PasswordRecovery";
 import { Dashboard } from "@/components/Dashboard";
 import { useToast } from "@/hooks/use-toast";
 import NotFound from "./pages/NotFound";
@@ -15,12 +16,13 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AuthScreen = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const { login, register } = useAuth();
+  const [screen, setScreen] = useState<'login' | 'register' | 'recovery'>('login');
+  const { login, register } = useDatabase();
   const { toast } = useToast();
 
-  const handleLogin = (credentials: { username: string; password: string }) => {
-    if (login(credentials)) {
+  const handleLogin = async (credentials: { username: string; password: string }) => {
+    const success = await login(credentials);
+    if (success) {
       toast({
         title: "¡Bienvenido!",
         description: "Inicio de sesión exitoso",
@@ -34,8 +36,9 @@ const AuthScreen = () => {
     }
   };
 
-  const handleRegister = (userData: any) => {
-    if (register(userData)) {
+  const handleRegister = async (userData: any) => {
+    const success = await register(userData);
+    if (success) {
       toast({
         title: "¡Registro exitoso!",
         description: "Su cuenta ha sido creada correctamente",
@@ -49,20 +52,46 @@ const AuthScreen = () => {
     }
   };
 
+  const getScreenConfig = () => {
+    switch (screen) {
+      case 'register':
+        return {
+          title: "Crear Cuenta",
+          subtitle: "Registre su cuenta profesional"
+        };
+      case 'recovery':
+        return {
+          title: "Recuperar Contraseña",
+          subtitle: "Recupere el acceso a su cuenta"
+        };
+      default:
+        return {
+          title: "Iniciar Sesión",
+          subtitle: "Acceda a su cuenta médica"
+        };
+    }
+  };
+
+  const { title, subtitle } = getScreenConfig();
+
   return (
-    <AuthLayout 
-      title={isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
-      subtitle={isLogin ? "Acceda a su cuenta médica" : "Registre su cuenta profesional"}
-    >
-      {isLogin ? (
+    <AuthLayout title={title} subtitle={subtitle}>
+      {screen === 'login' && (
         <LoginForm 
           onLogin={handleLogin}
-          onSwitchToRegister={() => setIsLogin(false)}
+          onSwitchToRegister={() => setScreen('register')}
+          onSwitchToRecovery={() => setScreen('recovery')}
         />
-      ) : (
+      )}
+      {screen === 'register' && (
         <RegisterForm 
           onRegister={handleRegister}
-          onSwitchToLogin={() => setIsLogin(true)}
+          onSwitchToLogin={() => setScreen('login')}
+        />
+      )}
+      {screen === 'recovery' && (
+        <PasswordRecovery 
+          onBackToLogin={() => setScreen('login')}
         />
       )}
     </AuthLayout>
@@ -70,7 +99,7 @@ const AuthScreen = () => {
 };
 
 const AppContent = () => {
-  const { user, isLoading, logout, isAuthenticated } = useAuth();
+  const { currentUser, isLoading, logout, isAuthenticated } = useDatabase();
 
   if (isLoading) {
     return (
@@ -83,11 +112,11 @@ const AppContent = () => {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated || !currentUser) {
     return <AuthScreen />;
   }
 
-  return <Dashboard user={user} onLogout={logout} />;
+  return <Dashboard user={currentUser} onLogout={logout} />;
 };
 
 const App = () => (
